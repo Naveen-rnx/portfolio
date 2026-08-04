@@ -288,9 +288,14 @@ export default function Home() {
               >
                 naveen852963@gmail.com
               </a>
-              <span className="rounded-lg border border-dashed border-line px-5 py-2.5 text-muted">
-                LinkedIn — coming soon
-              </span>
+              <a
+                href="https://www.linkedin.com/in/naveen-rnx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-line px-5 py-2.5 transition-colors hover:border-accent hover:text-accent"
+              >
+                LinkedIn ↗
+              </a>
             </div>
           </div>
         </section>
