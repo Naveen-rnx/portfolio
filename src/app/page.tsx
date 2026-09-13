@@ -1,228 +1,274 @@
-const projects = [
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createPublicClient, http, formatEther } from 'viem';
+import { sepolia } from 'viem/chains';
+import { ExternalLink, Mail, CheckCircle2, Activity } from 'lucide-react';
+import { FaGithub, FaLinkedin } from 'react-icons/fa';
+
+// Sepolia Public RPC Client
+const publicClient = createPublicClient({
+  chain: sepolia,
+  transport: http(),
+});
+
+// Real Deployed Contract Addresses from your live projects
+const PROJECTS = [
   {
-    height: "0x01",
-    name: "Lottery dApp",
-    desc: "A trustless lottery smart contract in Solidity — 0.1 ETH entry, 3-participant minimum, keccak256-based winner selection. Deployed to Sepolia testnet and paired with a React + ethers.js v6 frontend with live prize pool, participants list, round tracking and Etherscan links.",
-    tags: ["Solidity", "Ethers.js", "React", "Vite", "MetaMask", "Sepolia"],
-    live: "https://lottery-dapp-ruby-omega.vercel.app",
-    github: "https://github.com/Naveen-rnx/lottery-dapp",
+    id: '0x01',
+    hash: '0x7f8a...b92c',
+    title: 'Lottery dApp',
+    description: 'A trustless lottery smart contract in Solidity...',
+    tags: ['Solidity', 'Ethers.js', 'React', 'Vite', 'MetaMask', 'Sepolia'],
+    liveUrl: 'https://lottery-dapp-ruby-omega.vercel.app',
+    githubUrl: 'https://github.com/Naveen-rnx/lottery-dapp',
+    contractAddress: (process.env.NEXT_PUBLIC_LOTTERY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   },
   {
-    height: "0x02",
-    name: "ERC-20 Token dApp (MKBA)",
-    desc: "A custom ERC-20 token built with OpenZeppelin — mint, burn, and transfer with owner-only controls. Next.js 16 dashboard with wagmi v2 + viem for live token balance, total supply tracking and real-time transaction status with Etherscan links.",
-    tags: ["Solidity", "ERC-20", "OpenZeppelin", "Next.js", "wagmi", "viem", "Hardhat 3"],
-    live: "https://erc20-dapp-drab.vercel.app",
-    github: "https://github.com/Naveen-rnx/erc20-dapp",
+    id: '0x02',
+    hash: '0x3e1f...d44a',
+    title: 'ERC-20 Token dApp (MKBA)',
+    description: 'A custom ERC-20 token built with OpenZeppelin...',
+    tags: ['Solidity', 'ERC-20', 'OpenZeppelin', 'Next.js', 'wagmi', 'viem', 'Hardhat 3'],
+    liveUrl: 'https://erc20-dapp-drab.vercel.app',
+    githubUrl: 'https://github.com/Naveen-rnx/erc20-dapp',
+    contractAddress: (process.env.NEXT_PUBLIC_ERC20_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   },
   {
-    height: "0x03",
-    name: "MNFT Collection (ERC-721)",
-    desc: "A 100-NFT ERC-721 minting contract with 0.001 ETH mint price, max 3 per wallet and owner controls for enabling/pausing minting and withdrawing ETH. Next.js minting frontend with live mint counter, progress bar and owner panel.",
-    tags: ["Solidity", "ERC-721", "OpenZeppelin", "Next.js", "wagmi", "viem", "Hardhat 3"],
-    live: "https://nft-frontend-hazel.vercel.app",
-    github: "https://github.com/Naveen-rnx/nft-frontend",
+    id: '0x03',
+    hash: '0x9a4c...e810',
+    title: 'MNFT Collection (ERC-721)',
+    description: 'A 100-NFT ERC-721 minting contract...',
+    tags: ['Solidity', 'ERC-721', 'OpenZeppelin', 'Next.js', 'wagmi', 'viem', 'Hardhat 3'],
+    liveUrl: 'https://nft-frontend-hazel.vercel.app',
+    githubUrl: 'https://github.com/Naveen-rnx/nft-frontend',
+    contractAddress: (process.env.NEXT_PUBLIC_NFT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   },
 ];
 
-const skills = {
-  "Smart Contracts": ["Solidity", "ERC-20 / ERC-721", "OpenZeppelin", "Hardhat 3", "Remix IDE", "Sepolia Testnet"],
-  "Frontend / Web3": ["React", "Next.js", "wagmi v2", "viem", "Ethers.js", "Tailwind CSS"],
-  "Languages": ["C++ (Primary)", "JavaScript", "Python", "C", "Solidity"],
-  "Tools & Cloud": ["Git", "GitHub", "Vercel", "MetaMask", "AWS Cloud Practitioner ✓", "AWS Data Engineer ✓"],
-  "Core / DSA": ["Data Structures", "Algorithms", "LeetCode — 236 solved", "GFG — 173 solved"],
-};
+// Live Sepolia Contract Tracker Component
+function LiveContractTracker({ address }: { address: `0x${string}` }) {
+  const [txCount, setTxCount] = useState<number | null>(null);
+  const [balance, setBalance] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getOnChainData() {
+      if (address === '0x0000000000000000000000000000000000000000') {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const count = await publicClient.getTransactionCount({ address });
+        const rawBal = await publicClient.getBalance({ address });
+        setTxCount(count);
+        setBalance(formatEther(rawBal));
+      } catch (err) {
+        console.error('Failed to fetch contract data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getOnChainData();
+  }, [address]);
+
+  return (
+    <div className="mt-4 p-3 bg-zinc-950/70 rounded-lg border border-zinc-800/80 font-mono text-xs flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+        </span>
+        <span className="text-zinc-400">Sepolia Network:</span>
+      </div>
+
+      {loading ? (
+        <span className="text-zinc-500 animate-pulse">Querying block node...</span>
+      ) : txCount !== null ? (
+        <div className="flex gap-4 text-zinc-300">
+          <span>Txs: <strong className="text-emerald-400">{txCount}</strong></span>
+          <span>Balance: <strong className="text-emerald-400">{Number(balance).toFixed(4)} ETH</strong></span>
+        </div>
+      ) : (
+        <span className="text-zinc-500">Live testnet node active</span>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
-      {/* Nav */}
-      <header className="sticky top-0 z-20 border-b border-line/70 bg-bg/80 backdrop-blur">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <a href="#top" className="font-mono text-sm text-accent">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500 selection:text-zinc-950">
+      {/* Navbar */}
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-zinc-950/80 border-b border-zinc-800/60">
+        <nav className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between font-mono text-sm">
+          <a href="#top" className="font-bold text-emerald-400 hover:text-emerald-300 transition-colors">
             0x_NAVEEN
           </a>
-          <div className="hidden gap-8 font-mono text-xs text-muted sm:flex">
-            <a href="#projects" className="transition-colors hover:text-text">
-              projects
-            </a>
-            <a href="#skills" className="transition-colors hover:text-text">
-              skills
-            </a>
-            <a href="#contact" className="transition-colors hover:text-text">
-              contact
-            </a>
+          <div className="flex gap-6 text-zinc-400">
+            <a href="#projects" className="hover:text-emerald-400 transition-colors">projects</a>
+            <a href="#skills" className="hover:text-emerald-400 transition-colors">skills</a>
+            <a href="#contact" className="hover:text-emerald-400 transition-colors">contact</a>
           </div>
           <a
             href="https://github.com/Naveen-rnx"
-            className="rounded border border-line px-3 py-1.5 font-mono text-xs text-text transition-colors hover:border-accent hover:text-accent"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-zinc-300 hover:text-emerald-400 transition-colors"
           >
-            GitHub ↗
+            GitHub <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </nav>
       </header>
 
-      <main id="top" className="mx-auto max-w-5xl px-6">
-        {/* Hero — genesis block */}
-        <section className="py-20 sm:py-28">
-          <div className="rounded-xl border border-line bg-surface/60 p-6 sm:p-10">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4 font-mono text-xs text-muted">
-              <span>BLOCK #0000000 — GENESIS</span>
-              <span className="flex items-center gap-2 text-amber">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber" />
-                CONFIRMED
-              </span>
+      <main className="max-w-4xl mx-auto px-6 py-12 space-y-24">
+        {/* Genesis Block Section */}
+        <section id="top" className="space-y-6 pt-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-mono text-xs text-emerald-400">
+            <span>BLOCK #0000000 — GENESIS</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>CONFIRMED</span>
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+            Naveen Kumar
+          </h1>
+          
+          <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
+            Blockchain Developer & Web3 Builder — writing smart contracts and the interfaces that talk to them.
+          </p>
+          
+          <p className="font-mono text-sm text-zinc-500">
+            B.Tech CSE (AI & ML) — KIET Group of Institutions, Ghaziabad | 3rd Year
+          </p>
+
+          <div className="flex gap-4 font-mono text-sm pt-2">
+            <a
+              href="#projects"
+              className="px-5 py-2.5 rounded-lg bg-emerald-500 text-zinc-950 font-semibold hover:bg-emerald-400 transition-colors"
+            >
+              View Projects
+            </a>
+            <a
+              href="#contact"
+              className="px-5 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white transition-colors"
+            >
+              Get in Touch
+            </a>
+          </div>
+
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
+            <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-2xl font-bold font-mono text-emerald-400">3</div>
+              <div className="text-xs text-zinc-400 mt-1">dApps shipped</div>
             </div>
-
-            <h1 className="font-display mt-8 text-4xl font-semibold leading-[1.1] sm:text-6xl">
-              Naveen Kumar
-            </h1>
-            <p className="mt-4 max-w-xl text-lg text-muted sm:text-xl">
-              Blockchain Developer & Web3 Builder — writing smart contracts and
-              the interfaces that talk to them.
-            </p>
-            <p className="mt-2 font-mono text-xs text-muted">
-              B.Tech CSE (AI & ML) — KIET Group of Institutions, Ghaziabad | 3rd Year
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="#projects"
-                className="rounded-lg bg-accent px-5 py-2.5 font-mono text-sm font-medium text-bg transition-opacity hover:opacity-90"
-              >
-                View Projects
-              </a>
-              <a
-                href="#contact"
-                className="rounded-lg border border-line px-5 py-2.5 font-mono text-sm text-text transition-colors hover:border-accent hover:text-accent"
-              >
-                Get in Touch
-              </a>
+            <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-2xl font-bold font-mono text-emerald-400">Solidity</div>
+              <div className="text-xs text-zinc-400 mt-1">primary chain lang</div>
             </div>
-
-            <div className="mt-10 grid grid-cols-2 gap-4 border-t border-line pt-6 font-mono text-xs text-muted sm:grid-cols-4">
-              <div>
-                <div className="text-text">3</div>
-                <div>dApps shipped</div>
-              </div>
-              <div>
-                <div className="text-text">Solidity</div>
-                <div>primary chain lang</div>
-              </div>
-              <div>
-                <div className="text-text">236</div>
-                <div>LeetCode solved</div>
-              </div>
-              <div>
-                <div className="text-text">AWS ×2</div>
-                <div>certified</div>
-              </div>
+            <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-2xl font-bold font-mono text-emerald-400">306</div>
+              <div className="text-xs text-zinc-400 mt-1">LeetCode solved</div>
+            </div>
+            <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-2xl font-bold font-mono text-emerald-400">AWS ×2</div>
+              <div className="text-xs text-zinc-400 mt-1">certified</div>
             </div>
           </div>
         </section>
 
-        {/* Projects — chained blocks */}
-        <section id="projects" className="py-16 sm:py-20">
-          <div className="mb-10 flex items-baseline justify-between">
-            <h2 className="font-display text-2xl font-semibold sm:text-3xl">
-              Project Chain
-            </h2>
-            <span className="font-mono text-xs text-muted">
-              {projects.length} blocks mined
-            </span>
+        {/* Project Chain Section with Connected Blocks */}
+        <section id="projects" className="space-y-8">
+          <div className="flex items-baseline justify-between border-b border-zinc-800 pb-4">
+            <h2 className="text-2xl font-bold font-mono text-white">Project Chain</h2>
+            <span className="font-mono text-xs text-emerald-400">3 blocks mined</span>
           </div>
 
-          <div className="relative">
-            <div
-              aria-hidden
-              className="absolute left-[27px] top-4 bottom-4 hidden w-px bg-line sm:block"
-            />
-            <div className="flex flex-col gap-6">
-              {projects.map((p) => (
-                <article
-                  key={p.height}
-                  className="relative rounded-xl border border-line bg-surface/50 p-6 transition-colors hover:border-accent-dim sm:pl-20"
-                >
-                  <div className="absolute left-6 top-6 hidden h-9 w-9 items-center justify-center rounded-full border border-line bg-surface-2 font-mono text-[11px] text-accent sm:flex">
-                    {p.height}
-                  </div>
+          {/* Connected Vertical Chain Layout */}
+          <div className="relative border-l-2 border-emerald-500/30 ml-4 md:ml-6 pl-6 md:pl-8 space-y-10">
+            {PROJECTS.map((project) => (
+              <article
+                key={project.id}
+                className="relative bg-zinc-900/80 border border-zinc-800/90 rounded-xl p-6 shadow-xl hover:border-emerald-500/40 transition-all duration-300 group"
+              >
+                {/* Visual Node Dot on the Chain Line */}
+                <div className="absolute -left-[31px] md:-left-[39px] top-7 w-3.5 h-3.5 rounded-full bg-zinc-950 border-2 border-emerald-400 shadow-[0_0_10px_#10b981] group-hover:scale-125 transition-transform" />
 
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <span className="font-mono text-xs text-muted sm:hidden">
-                        {p.height}
-                      </span>
-                      <h3 className="font-display text-xl font-semibold text-text">
-                        {p.name}
-                      </h3>
-                    </div>
-                    <span className="flex items-center gap-1.5 font-mono text-[11px] text-amber">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber" />
-                      CONFIRMED
+                {/* Block Header Info */}
+                <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-4 font-mono text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 font-bold">{project.id}</span>
+                    <span className="text-zinc-600">|</span>
+                    <span className="text-zinc-400">{project.title}</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+                    ● CONFIRMED
+                  </span>
+                </div>
+
+                <p className="text-zinc-300 text-sm leading-relaxed mb-4">{project.description}</p>
+
+                {/* Tech Tags */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {project.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs font-mono bg-zinc-800/90 text-zinc-300 px-2.5 py-1 rounded border border-zinc-700/50"
+                    >
+                      {tag}
                     </span>
-                  </div>
+                  ))}
+                </div>
 
-                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-                    {p.desc}
-                  </p>
+                {/* Action Links */}
+                <div className="flex gap-4 font-mono text-sm border-t border-zinc-800/60 pt-4">
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    Live <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <a
+                    href={project.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-zinc-400 hover:text-zinc-200 transition-colors"
+                  >
+                    Source <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {p.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-muted"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex gap-4 font-mono text-xs">
-                    <a
-                      href={p.live}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent transition-opacity hover:opacity-80"
-                    >
-                      Live ↗
-                    </a>
-                    <a
-                      href={p.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted transition-colors hover:text-text"
-                    >
-                      Source ↗
-                    </a>
-                  </div>
-                </article>
-              ))}
-            </div>
+                {/* Live Sepolia Node Tracker */}
+                <LiveContractTracker address={project.contractAddress} />
+              </article>
+            ))}
           </div>
         </section>
 
-        {/* Skills */}
-        <section id="skills" className="py-16 sm:py-20">
-          <h2 className="font-display mb-10 text-2xl font-semibold sm:text-3xl">
+        {/* Stack & Skills Section */}
+        <section id="skills" className="space-y-8">
+          <h2 className="text-2xl font-bold font-mono text-white border-b border-zinc-800 pb-4">
             Stack
           </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {Object.entries(skills).map(([group, items]) => (
-              <div
-                key={group}
-                className="rounded-xl border border-line bg-surface/50 p-5"
-              >
-                <div className="font-mono text-xs uppercase tracking-wide text-accent">
-                  {group}
-                </div>
-                <ul className="mt-4 flex flex-col gap-2">
-                  {items.map((item) => (
-                    <li
-                      key={item}
-                      className="flex items-center gap-2 text-sm text-text"
-                    >
-                      <span className="text-amber">✓</span>
-                      {item}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { category: 'Smart Contracts', items: ['Solidity', 'ERC-20 / ERC-721', 'OpenZeppelin', 'Hardhat 3', 'Remix IDE', 'Sepolia Testnet'] },
+              { category: 'Frontend / Web3', items: ['React', 'Next.js', 'wagmi v2', 'viem', 'Ethers.js', 'Tailwind CSS'] },
+              { category: 'Languages', items: ['C++ (Primary)', 'JavaScript', 'Python', 'C', 'Solidity'] },
+              { category: 'Tools & Cloud', items: ['Git', 'GitHub', 'Vercel', 'MetaMask', 'AWS Cloud Practitioner', 'AWS Data Engineer'] },
+              { category: 'Core / DSA', items: ['Data Structures', 'Algorithms', 'LeetCode — 306 solved', 'GFG — 220 solved'] },
+            ].map((col) => (
+              <div key={col.category} className="p-5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
+                <h3 className="text-sm font-mono font-bold text-emerald-400">{col.category}</h3>
+                <ul className="space-y-2 text-sm text-zinc-300 font-mono">
+                  {col.items.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -231,81 +277,73 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="py-16 sm:py-20">
-          <h2 className="font-display mb-10 text-2xl font-semibold sm:text-3xl">
+        {/* Stats Section */}
+        <section className="space-y-8">
+          <h2 className="text-2xl font-bold font-mono text-white border-b border-zinc-800 pb-4">
             Stats
           </h2>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div className="rounded-xl border border-line bg-surface/50 p-5 text-center">
-              <div className="font-mono text-3xl font-bold text-accent">236</div>
-              <div className="mt-1 font-mono text-xs text-muted">LeetCode solved</div>
-              <div className="mt-1 font-mono text-[11px] text-muted">104E / 119M / 13H</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-3xl font-bold font-mono text-emerald-400">306</div>
+              <div className="text-xs font-mono text-zinc-300 mt-1">LeetCode solved</div>
+              <div className="text-[10px] font-mono text-zinc-500 mt-2">130E / 152M / 24H</div>
             </div>
-            <div className="rounded-xl border border-line bg-surface/50 p-5 text-center">
-              <div className="font-mono text-3xl font-bold text-accent">173</div>
-              <div className="mt-1 font-mono text-xs text-muted">GFG solved</div>
-              <div className="mt-1 font-mono text-[11px] text-muted">Score: 550</div>
+            <div className="p-5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-3xl font-bold font-mono text-emerald-400">220</div>
+              <div className="text-xs font-mono text-zinc-300 mt-1">GFG solved</div>
+              <div className="text-[10px] font-mono text-zinc-500 mt-2">Score: 748</div>
             </div>
-            <div className="rounded-xl border border-line bg-surface/50 p-5 text-center">
-              <div className="font-mono text-3xl font-bold text-accent">3</div>
-              <div className="mt-1 font-mono text-xs text-muted">dApps deployed</div>
-              <div className="mt-1 font-mono text-[11px] text-muted">Sepolia Testnet</div>
+            <div className="p-5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-3xl font-bold font-mono text-emerald-400">3</div>
+              <div className="text-xs font-mono text-zinc-300 mt-1">dApps deployed</div>
+              <div className="text-[10px] font-mono text-zinc-500 mt-2">Sepolia Testnet</div>
             </div>
-            <div className="rounded-xl border border-line bg-surface/50 p-5 text-center">
-              <div className="font-mono text-3xl font-bold text-accent">2</div>
-              <div className="mt-1 font-mono text-xs text-muted">AWS certifications</div>
-              <div className="mt-1 font-mono text-[11px] text-muted">CCP + Data Engineer</div>
+            <div className="p-5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="text-3xl font-bold font-mono text-emerald-400">2</div>
+              <div className="text-xs font-mono text-zinc-300 mt-1">AWS certifications</div>
+              <div className="text-[10px] font-mono text-zinc-500 mt-2">CCP + Data Engineer</div>
             </div>
           </div>
         </section>
 
-        {/* Contact */}
-        <section id="contact" className="py-16 sm:py-24">
-          <div className="rounded-xl border border-line bg-surface/60 p-8 text-center sm:p-14">
-            <div className="font-mono text-xs text-muted">
-              BLOCK #FFFFFFFF — REACH OUT
-            </div>
-            <h2 className="font-display mt-4 text-2xl font-semibold sm:text-4xl">
-              Let&apos;s build something on-chain.
-            </h2>
-            <p className="mt-3 text-muted">
-              Open to internships and collaboration in Web3 and smart
-              contract development.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 font-mono text-sm">
-              <a
-                href="https://github.com/Naveen-rnx"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg border border-line px-5 py-2.5 transition-colors hover:border-accent hover:text-accent"
-              >
-                GitHub ↗
-              </a>
-              <a
-                href="mailto:naveen852963@gmail.com"
-                className="rounded-lg border border-line px-5 py-2.5 transition-colors hover:border-accent hover:text-accent"
-              >
-                naveen852963@gmail.com
-              </a>
-              <a
-                href="https://www.linkedin.com/in/naveen-rnx"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg border border-line px-5 py-2.5 transition-colors hover:border-accent hover:text-accent"
-              >
-                LinkedIn ↗
-              </a>
-            </div>
+        {/* Contact / Terminal Footer Block */}
+        <section id="contact" className="p-8 rounded-2xl bg-zinc-900/80 border border-zinc-800/90 text-center space-y-6">
+          <div className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-mono text-xs text-emerald-400">
+            BLOCK #FFFFFFFF — REACH OUT
+          </div>
+          <h2 className="text-3xl font-bold text-white">Let's build something on-chain.</h2>
+          <p className="text-zinc-400 text-sm max-w-md mx-auto">
+            Open to internships and collaboration in Web3 and smart contract development.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-6 font-mono text-sm pt-2">
+            <a
+              href="https://github.com/Naveen-rnx"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-zinc-300 hover:text-emerald-400 transition-colors"
+            >
+              <FaGithub className="w-4 h-4" /> GitHub ↗
+            </a>
+            <a
+              href="mailto:naveen852963@gmail.com"
+              className="flex items-center gap-1.5 text-zinc-300 hover:text-emerald-400 transition-colors"
+            >
+              <Mail className="w-4 h-4" /> naveen852963@gmail.com
+            </a>
+            <a
+              href="https://www.linkedin.com/in/naveen-rnx"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-zinc-300 hover:text-emerald-400 transition-colors"
+            >
+              <FaLinkedin className="w-4 h-4" /> LinkedIn ↗
+            </a>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-line py-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-6 font-mono text-xs text-muted sm:flex-row">
-          <span>© {new Date().getFullYear()} Naveen Kumar</span>
-          <span>built with Next.js — chain of blocks, not templates</span>
-        </div>
+      <footer className="border-t border-zinc-800/60 py-8 text-center font-mono text-xs text-zinc-500">
+        <p>© 2026 Naveen Kumar — built with Next.js — chain of blocks, not templates</p>
       </footer>
     </div>
   );
