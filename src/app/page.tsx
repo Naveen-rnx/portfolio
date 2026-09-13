@@ -122,23 +122,9 @@ export default function Home() {
           </a>
         </nav>
       </header>
-      <main className="min-h-screen bg-black text-white p-8">
-      {/* Portfolio Header */}
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
-          Web3 Architecture & Smart Contracts
-        </h1>
-        <p className="text-gray-400">
-          Live Sepolia contract deployments monitored via Viem node client.
-        </p>
-
+      <main className="max-w-4xl mx-auto px-6 py-12 space-y-24">
         {/* Live Event Stream Ticker */}
         <EventTicker />
-
-        {/* Your Existing Chain-Link Project Cards below */}
-      </div>
-    </main>
-      <main className="max-w-4xl mx-auto px-6 py-12 space-y-24">
         {/* Genesis Block Section */}
         <section id="top" className="space-y-6 pt-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-mono text-xs text-emerald-400">
