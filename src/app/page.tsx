@@ -5,6 +5,7 @@ import { createPublicClient, http, formatEther } from 'viem';
 import { sepolia } from 'viem/chains';
 import { ExternalLink, Mail, CheckCircle2, Activity } from 'lucide-react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
+import EventTicker from "@/components/EventTicker";
 
 // Sepolia Public RPC Client
 const publicClient = createPublicClient({
@@ -121,7 +122,22 @@ export default function Home() {
           </a>
         </nav>
       </header>
+      <main className="min-h-screen bg-black text-white p-8">
+      {/* Portfolio Header */}
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
+          Web3 Architecture & Smart Contracts
+        </h1>
+        <p className="text-gray-400">
+          Live Sepolia contract deployments monitored via Viem node client.
+        </p>
 
+        {/* Live Event Stream Ticker */}
+        <EventTicker />
+
+        {/* Your Existing Chain-Link Project Cards below */}
+      </div>
+    </main>
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-24">
         {/* Genesis Block Section */}
         <section id="top" className="space-y-6 pt-6">
